@@ -12,6 +12,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
 
     private CircleImageView NavProfileImage;
     private TextView NavProfileUserName;
+    private ImageButton AddNewPostButton;
 
     private FirebaseAuth mAuth;
     private DatabaseReference UsersRef;
@@ -48,18 +50,23 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mAuth = FirebaseAuth.getInstance();
-        //currentUserID=mAuth.getCurrentUser().getUid();
+
+        //ktra currentuser ton tai, neu k chuyen den loginactivity, neu co lay userid => lay profileimage, fullname
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser == null){
             SendUserToLoginActivity();
         }else{
             currentUserID = mAuth.getCurrentUser().getUid();
         }
+
+
         UsersRef = FirebaseDatabase.getInstance().getReference().child("Users");
 
         mToolbar = (Toolbar) findViewById(R.id.main_page_toolbar);
         setSupportActionBar(mToolbar);
         getSupportActionBar().setTitle("Home");
+
+        AddNewPostButton=(ImageButton) findViewById(R.id.add_new_post_button);
 
 
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -70,18 +77,28 @@ public class MainActivity extends AppCompatActivity {
         navigationView = (NavigationView) findViewById(R.id.navigation_view);
 
         View navView = navigationView.inflateHeaderView(R.layout.navigation_header);
+
+        //hien anh len nav_profile_image, hien fullname len nav_user_full_name
         NavProfileImage = (CircleImageView) navView.findViewById(R.id.nav_profile_image);
         NavProfileUserName= (TextView) navView.findViewById(R.id.nav_user_full_name);
 
+        //su kien lay fullname vs image tu firebase, hien thi le navigation header
         UsersRef.child(currentUserID).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if(dataSnapshot.exists()){
-                    String fullname=dataSnapshot.child("fullname").getValue().toString();
-                    String image=dataSnapshot.child("profileimage").getValue().toString();
+                    if(dataSnapshot.hasChild("fullname")){
+                        String fullname=dataSnapshot.child("fullname").getValue().toString();
+                        NavProfileUserName.setText(fullname);
+                    }
+                    if(dataSnapshot.hasChild("profileimage")){
+                        String image=dataSnapshot.child("profileimage").getValue().toString();
+                        Picasso.with(MainActivity.this).load(image).placeholder(R.drawable.profile).into(NavProfileImage);
+                    }
+                    else {
+                        Toast.makeText(MainActivity.this,"Profile image or name do not exists...", Toast.LENGTH_SHORT).show();
+                    }
 
-                    NavProfileUserName.setText(fullname);
-                    Picasso.with(MainActivity.this).load(image).placeholder(R.drawable.profile).into(NavProfileImage);
                 }
             }
 
@@ -99,6 +116,21 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
+
+
+        AddNewPostButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SendUserToPostActivity();
+            }
+        });
+    }
+
+    private void SendUserToPostActivity() {
+        Intent addNewPostIntent = new Intent(MainActivity.this, PostActivity.class);
+        //addNewPostIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(addNewPostIntent);
+        finish();
     }
 
 
@@ -165,6 +197,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void UserMenuSelector(MenuItem menuItem) {
         switch (menuItem.getItemId()){
+            case R.id.nav_post:
+                SendUserToPostActivity();
+                break;
             case R.id.nav_profile:
                 Toast.makeText(this,"Profile", Toast.LENGTH_SHORT).show();
                 break;
