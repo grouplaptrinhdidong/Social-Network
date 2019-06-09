@@ -30,6 +30,10 @@
         android:title="Settings"
         android:icon="@drawable/settings"/>
     <item
+        android:id="@+id/nav_friend_request"
+        android:title="Friend request"
+        android:icon="@drawable/find_people"/>
+    <item
         android:id="@+id/nav_logout"
         android:title="Log out"
         android:icon="@drawable/logout"/>

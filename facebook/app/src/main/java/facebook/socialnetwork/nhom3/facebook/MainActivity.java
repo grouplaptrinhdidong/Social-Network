@@ -26,8 +26,14 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -44,9 +50,10 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton AddNewPostButton;
 
     private FirebaseAuth mAuth;
-    private DatabaseReference UsersRef, PostsRef;
+    private DatabaseReference UsersRef, PostsRef, LikesRef;
 
     String currentUserID;
+    Boolean LikeChecker = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,16 +63,20 @@ public class MainActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
 
         //ktra currentuser ton tai, neu k chuyen den loginactivity, neu co lay userid => lay profileimage, fullname
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        if (currentUser == null){
+        //FirebaseUser currentUser = mAuth.getCurrentUser();
+        /*if (currentUser == null){
             SendUserToLoginActivity();
         }else{
             currentUserID = mAuth.getCurrentUser().getUid();
-        }
+        }*/
+
 
 
         UsersRef = FirebaseDatabase.getInstance().getReference().child("Users");
         PostsRef = FirebaseDatabase.getInstance().getReference().child("Posts");
+        LikesRef = FirebaseDatabase.getInstance().getReference().child("Likes");
+
+        currentUserID = mAuth.getCurrentUser().getUid();
 
         mToolbar = (Toolbar) findViewById(R.id.main_page_toolbar);
         setSupportActionBar(mToolbar);
@@ -109,6 +120,7 @@ public class MainActivity extends AppCompatActivity {
                         Picasso.with(MainActivity.this).load(image).placeholder(R.drawable.profile).into(NavProfileImage);
                     }
                     else {
+                        SendUserToSetupActivity();
                         Toast.makeText(MainActivity.this,"Profile image or name do not exists...", Toast.LENGTH_SHORT).show();
                     }
 
@@ -141,11 +153,34 @@ public class MainActivity extends AppCompatActivity {
         DisplayAllUsersPosts();
     }
 
+    //update User Status
+    public void updateUserStatus(String state){
+        String saveCurrentDate, saveCurrentTime;
+
+        Calendar calForDate = Calendar.getInstance();
+        SimpleDateFormat currentDate = new SimpleDateFormat("MMM dd, yyyy");
+        saveCurrentDate = currentDate.format(calForDate.getTime());
+
+        Calendar calForTime = Calendar.getInstance();
+        SimpleDateFormat currentTime = new SimpleDateFormat("hh:mm:ss a");
+        saveCurrentTime = currentTime.format(calForTime.getTime());
+
+        Map currentStateMap = new HashMap();
+        currentStateMap.put("time", saveCurrentTime);
+        currentStateMap.put("date", saveCurrentDate);
+        currentStateMap.put("type", state);
+
+        UsersRef.child(currentUserID).child("userState")
+                .updateChildren(currentStateMap);
+    }
     private void DisplayAllUsersPosts() {
+
+
+        Query SortPostsInDecendingOrder = PostsRef.orderByChild("counter");
 
         FirebaseRecyclerAdapter<Posts, PostsViewHolder> firebaseRecyclerAdapter =
                 new FirebaseRecyclerAdapter<Posts, PostsViewHolder>
-                        (Posts.class, R.layout.all_posts_layout, PostsViewHolder.class, PostsRef) {
+                        (Posts.class, R.layout.all_posts_layout, PostsViewHolder.class, SortPostsInDecendingOrder) {
                     @Override
                     protected void populateViewHolder(PostsViewHolder viewHolder, Posts model, int position) {
 
@@ -158,6 +193,8 @@ public class MainActivity extends AppCompatActivity {
                         viewHolder.setProfileimage(getApplicationContext() ,model.getProfileimage());
                         viewHolder.setPostimage(getApplicationContext(), model.getPostimage());
 
+                        viewHolder.setLikeButtonStatus(PostKey);
+
                         viewHolder.mView.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
@@ -166,9 +203,52 @@ public class MainActivity extends AppCompatActivity {
                                 startActivity(clickPostIntent);
                             }
                         });
+
+                        viewHolder.CommentPostButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Intent commentsIntent = new Intent(MainActivity.this, CommentsActivity.class);
+                                commentsIntent.putExtra("PostKey", PostKey);
+                                startActivity(commentsIntent);
+                            }
+                        });
+
+
+
+                        viewHolder.LikePostButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+
+                                LikeChecker =true;
+                                LikesRef.addValueEventListener(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+
+                                        if(LikeChecker.equals(true)){
+
+                                            if(dataSnapshot.child(PostKey).hasChild(currentUserID)){
+                                                LikesRef.child(PostKey).child(currentUserID).removeValue();
+                                                LikeChecker=false;
+                                            }
+                                            else {
+                                                LikesRef.child(PostKey).child(currentUserID).setValue(true);
+                                                LikeChecker=false;
+
+                                            }
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onCancelled(DatabaseError databaseError) {
+
+                                    }
+                                });
+                            }
+                        });
                     }
                 };
         postList.setAdapter(firebaseRecyclerAdapter);
+        updateUserStatus("online");
     }
 
 
@@ -176,10 +256,50 @@ public class MainActivity extends AppCompatActivity {
 
         View mView;
 
+        ImageButton LikePostButton, CommentPostButton;
+        TextView DisplayNoOfLikes;
+        int countLikes;
+        String currentUserId;
+        DatabaseReference LikesRef;
+
         public PostsViewHolder(@NonNull View itemView) {
             super(itemView);
             mView = itemView;
+
+            LikePostButton =(ImageButton) mView.findViewById(R.id.like_button);
+            CommentPostButton =(ImageButton) mView.findViewById(R.id.comment_button);
+            DisplayNoOfLikes =(TextView) mView.findViewById(R.id.display_no_of_likes);
+
+            LikesRef =FirebaseDatabase.getInstance().getReference().child("Likes");
+            currentUserId =FirebaseAuth.getInstance().getCurrentUser().getUid();
+
         }
+
+
+        //set button like status
+        public void setLikeButtonStatus(final String PostKey){
+            LikesRef.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if(dataSnapshot.child(PostKey).hasChild(currentUserId)){
+                        countLikes = (int) dataSnapshot.child(PostKey).getChildrenCount();
+                        LikePostButton.setImageResource(R.drawable.like);
+                        DisplayNoOfLikes.setText((Integer.toString(countLikes)+ (" likes")));
+                    }
+                    else {
+                        countLikes = (int) dataSnapshot.child(PostKey).getChildrenCount();
+                        LikePostButton.setImageResource(R.drawable.dislike);
+                        DisplayNoOfLikes.setText((Integer.toString(countLikes)+ (" likes")));
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+        }
+
 
         public void setFullname(String fullname){
             TextView username = (TextView) mView.findViewById(R.id.post_user_name);
@@ -226,17 +346,25 @@ public class MainActivity extends AppCompatActivity {
 
         FirebaseUser currentUser = mAuth.getCurrentUser();
 
-        if(currentUser == null){
+        if (currentUser == null) {
             SendUserToLoginActivity();
             //SendUserToRegisterActivity();
-        }
-        else {
+        } else {
             CheckUserExistence();
         }
 
-
     }
-
+    //when user minimize app
+   /*@Override
+    protected void onStop(){
+        super.onStop();
+        updateUserStatus("offline");
+    }*/
+   /* @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        updateUserStatus("offline");
+    }*/
     private void CheckUserExistence() {
         final String current_user_id = mAuth.getCurrentUser().getUid();
 
@@ -254,7 +382,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+    private void SendUserToFriendsActivity() {
+        Intent FriendsIntent = new Intent(MainActivity.this, FriendsActivity.class);
+        startActivity(FriendsIntent);
 
+    }
 
     private void SendUserToSetupActivity() {
         Intent setupIntent = new Intent(MainActivity.this, SetupActivity.class);
@@ -274,7 +406,19 @@ public class MainActivity extends AppCompatActivity {
         Intent settingsIntent = new Intent(MainActivity.this, SettingsActivity.class);
         startActivity(settingsIntent);
     }
+    private void SendUserToProfileActivity() {
+        Intent settingsIntent = new Intent(MainActivity.this, ProfileActivity.class);
+        startActivity(settingsIntent);
+    }
 
+    private void SendUserToFindFriendsActivity() {
+        Intent settingsIntent = new Intent(MainActivity.this,FindFriendsActivity.class);
+        startActivity(settingsIntent);
+    }
+    private void SendUserFriendRequestActivity() {
+        Intent FriendsRequestIntent = new Intent(MainActivity.this, FriendsRequestActivity.class);
+        startActivity(FriendsRequestIntent);
+    }
 
 
     @Override
@@ -293,25 +437,34 @@ public class MainActivity extends AppCompatActivity {
                 SendUserToPostActivity();
                 break;
             case R.id.nav_profile:
+                SendUserToProfileActivity();
                 Toast.makeText(this,"Profile", Toast.LENGTH_SHORT).show();
                 break;
             case R.id.nav_home:
                 Toast.makeText(this,"Home", Toast.LENGTH_SHORT).show();
                 break;
             case R.id.nav_friends:
+                SendUserToFriendsActivity();
                 Toast.makeText(this,"Friend", Toast.LENGTH_SHORT).show();
                 break;
             case R.id.nav_find_friends:
+                SendUserToFindFriendsActivity();
                 Toast.makeText(this,"find friends", Toast.LENGTH_SHORT).show();
                 break;
             case R.id.nav_messages:
+                SendUserToFriendsActivity();
                 Toast.makeText(this,"Messages", Toast.LENGTH_SHORT).show();
                 break;
             case R.id.nav_settings:
                 SendUserToSettingsActivity();
                 Toast.makeText(this,"Settings", Toast.LENGTH_SHORT).show();
                 break;
+            case R.id.nav_friend_request:
+                SendUserFriendRequestActivity();
+                Toast.makeText(this,"Friends request", Toast.LENGTH_SHORT).show();
+                break;
             case R.id.nav_logout:
+                updateUserStatus("offline");
                 mAuth.signOut();
                 SendUserToLoginActivity();
                 //Toast.makeText(this,"Logout", Toast.LENGTH_SHORT).show();
@@ -319,4 +472,6 @@ public class MainActivity extends AppCompatActivity {
 
         }
     }
+
+
 }

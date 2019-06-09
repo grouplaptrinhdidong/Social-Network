@@ -3,4 +3,8 @@
     <color name="colorPrimary">#ed4c54</color>
     <color name="colorPrimaryDark">#67c415</color>
     <color name="colorAccent">#E9EBEE</color>
+    <color name="colorProfile">#3B4041</color>
+    <color name="mainBackground">#ece9e9</color>
+    <color name="sendercolor">#62c439</color>
+    <color name="receivercolor">#fdfcf2</color>
 </resources>

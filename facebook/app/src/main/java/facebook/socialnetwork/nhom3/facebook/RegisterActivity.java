@@ -69,8 +69,7 @@ public class RegisterActivity extends AppCompatActivity {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             if (task.isSuccessful()) {
-                                SendUserToSetupActivity();
-                                Toast.makeText(RegisterActivity.this, "You are authenticated successfully...", Toast.LENGTH_SHORT).show();
+                                SendEmailVerificationMessage();
                                 loadingBar.dismiss();
                             } else {
                                 String message = task.getException().getMessage();
@@ -93,6 +92,28 @@ public class RegisterActivity extends AppCompatActivity {
             //SendUserToRegisterActivity();
         }
     }
+    private void SendEmailVerificationMessage()
+    {
+        FirebaseUser user = mAuth.getCurrentUser();
+        if(user != null){
+            //Send email to user to verify
+            user.sendEmailVerification().addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    if(task.isSuccessful()){
+                        Toast.makeText(RegisterActivity.this,"Registration successfull, we've sent you a email. Please check and verify you account...", Toast.LENGTH_SHORT).show();
+                        SendUserToLoginActivity();
+                        mAuth.signOut();
+                    }
+                    else {
+                        String mess = task.getException().getMessage();
+                        Toast.makeText(RegisterActivity.this, "Error: " + mess, Toast.LENGTH_SHORT).show();
+                        mAuth.signOut();
+                    }
+                }
+            });
+        }
+    }
 
     private void SendUserToMainActivity() {
         Intent mainIntent = new Intent(RegisterActivity.this, MainActivity.class);
@@ -101,10 +122,10 @@ public class RegisterActivity extends AppCompatActivity {
         finish();
     }
 
-    private void SendUserToSetupActivity() {
-        Intent setupIntent = new Intent(RegisterActivity.this, SetupActivity.class);
-        setupIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(setupIntent);
+    private void SendUserToLoginActivity() {
+        Intent loginIntent = new Intent(RegisterActivity.this, LoginActivity.class);
+        loginIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(loginIntent);
         finish();
     }
 }

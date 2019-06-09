@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".PostActivity"
-    android:background="@drawable/login">
+    android:background="@drawable/bg6">
 
     <include
         android:id="@+id/update_post_page_toolbar"
@@ -18,12 +18,13 @@
         android:layout_height="300dp"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:layout_marginStart="0dp"
-        android:layout_marginTop="70dp"
+        android:layout_marginTop="88dp"
         android:scaleType="fitCenter"
-        app:srcCompat="@drawable/select_image"
-        tools:layout_editor_absoluteX="0dp"
-        tools:layout_editor_absoluteY="19dp" />
+        app:layout_constraintBottom_toTopOf="@+id/post_description"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/update_post_page_toolbar"
+        app:srcCompat="@drawable/select_image" />
 
     <EditText
         android:id="@+id/post_description"
@@ -31,13 +32,14 @@
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginStart="0dp"
-        android:layout_marginBottom="128dp"
+        android:layout_marginBottom="20dp"
         android:background="@drawable/inputs"
         android:ems="10"
         android:hint="write something"
         android:inputType="textMultiLine"
-        android:padding="15dp" />
+        android:padding="15dp"
+        app:layout_constraintBottom_toTopOf="@+id/update_post_button"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <Button
         android:id="@+id/update_post_button"
@@ -45,10 +47,12 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="5dp"
-        android:layout_marginBottom="67dp"
+        android:layout_marginStart="92dp"
+        android:layout_marginBottom="28dp"
         android:background="@drawable/button"
         android:text="Update Post"
         android:textColor="@android:color/background_light"
-        android:textSize="18sp" />
-</RelativeLayout>
+        android:textSize="18sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+</android.support.constraint.ConstraintLayout>

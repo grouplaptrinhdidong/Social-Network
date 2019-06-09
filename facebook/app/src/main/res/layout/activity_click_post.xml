@@ -1,22 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/register"
+    android:background="@drawable/bg6"
     tools:context=".ClickPostActivity">
 
     <ImageView
         android:id="@+id/click_post_image"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
+        android:layout_height="230dp"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="10dp"
-        android:layout_marginBottom="10dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/select_image" />
 
     <TextView
@@ -25,17 +24,15 @@
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginStart="14dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginTop="17dp"
-        android:layout_marginRight="10dp"
-        android:layout_marginBottom="263dp"
+        android:layout_marginTop="8dp"
         android:background="@drawable/inputs"
         android:padding="18dp"
         android:text="Post description..."
         android:textColor="@color/common_google_signin_btn_text_dark_focused"
         android:textSize="18sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/click_post_image" />
 
     <Button
         android:id="@+id/click_edit_post_button"
@@ -43,13 +40,17 @@
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginStart="39dp"
-        android:layout_marginBottom="79dp"
+        android:layout_marginStart="48dp"
+        android:layout_marginEnd="35dp"
+        android:layout_marginBottom="60dp"
         android:background="@drawable/button"
         android:text="Edit post"
         android:textColor="@color/common_google_signin_btn_text_dark_pressed"
         android:textSize="16sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/click_delete_post_button"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <Button
         android:id="@+id/click_delete_post_button"
@@ -57,11 +58,15 @@
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/click_edit_post_button"
         android:layout_alignParentEnd="true"
-        android:layout_marginEnd="39dp"
-        android:layout_marginBottom="0dp"
+        android:layout_marginStart="35dp"
+        android:layout_marginEnd="56dp"
+        android:layout_marginBottom="60dp"
         android:background="@drawable/button"
         android:text="Delete post"
         android:textColor="@color/common_google_signin_btn_text_dark_pressed"
         android:textSize="16sp"
-        android:textStyle="bold" />
-</RelativeLayout>
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/click_edit_post_button" />
+</android.support.constraint.ConstraintLayout>

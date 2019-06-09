@@ -55,6 +55,7 @@ public class PostActivity extends AppCompatActivity {
 
     private String downloadUrl, current_user_id;
 
+    private long countPosts = 0;
 
 
     @Override
@@ -154,6 +155,29 @@ public class PostActivity extends AppCompatActivity {
     }
 
     private void SavingPostInformationToDatabase() {
+
+
+        PostsRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                if (dataSnapshot.exists()){
+
+                    countPosts = dataSnapshot.getChildrenCount();
+                }
+                else {
+
+                    countPosts = 0;
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+
         UsersRef.child(current_user_id).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -170,6 +194,7 @@ public class PostActivity extends AppCompatActivity {
                     postsMap.put("description",Description);
                     postsMap.put("postimage",downloadUrl);
                     postsMap.put("profileimage",userProfileImage);
+                    postsMap.put("counter",countPosts);
 
 
                     PostsRef.child(current_user_id+ postRandomName).updateChildren(postsMap)
@@ -196,6 +221,7 @@ public class PostActivity extends AppCompatActivity {
 
             }
         });
+
 
     }
 
